@@ -27,10 +27,6 @@ server.start().then((url) => {
 
 // Stop the server
 server.stop();
-
-// Check if native server running
-const isRunning = await server.isRunning()
-// isRunning - true/false
 ```
 
 `StaticServer` serves from the document directory (default) or takes an optional absolute path to serve from.

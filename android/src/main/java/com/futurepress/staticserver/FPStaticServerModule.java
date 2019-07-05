@@ -58,7 +58,7 @@ public class FPStaticServerModule extends ReactContextBaseJavaModule implements 
     } catch (SocketException ex) {
       Log.e(LOGTAG, ex.toString());
     }
-
+    
     return "127.0.0.1";
   }
 
@@ -68,7 +68,7 @@ public class FPStaticServerModule extends ReactContextBaseJavaModule implements 
   }
 
   @ReactMethod
-  public void start(String _port, String root, Boolean localhost, Boolean keepAlive, Promise promise) {
+  public void start(String _port, String root, Boolean localhost, Boolean keepAlive, String key, Promise promise) {
 
     if (server != null){
       promise.resolve(url);
@@ -114,9 +114,9 @@ public class FPStaticServerModule extends ReactContextBaseJavaModule implements 
     try {
 
       if(localhost_only) {
-        server = new WebServer("localhost", port, www_root);
+        server = new WebServer("localhost", port, www_root, key);
       } else {
-        server = new WebServer(__getLocalIpAddress(), port, www_root);
+        server = new WebServer(__getLocalIpAddress(), port, www_root, key);
       }
 
 
