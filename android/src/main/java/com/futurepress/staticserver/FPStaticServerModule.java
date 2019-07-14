@@ -68,7 +68,8 @@ public class FPStaticServerModule extends ReactContextBaseJavaModule implements 
   }
 
   @ReactMethod
-  public void start(String _port, String root, Boolean localhost, Boolean keepAlive, String key, Promise promise) {
+  public void start(String _port, String root, Boolean localhost, Boolean keepAlive, String key, String salt, String iv,
+      int keySize, int iterationCount, Promise promise) {
 
     if (server != null){
       promise.resolve(url);
@@ -113,10 +114,10 @@ public class FPStaticServerModule extends ReactContextBaseJavaModule implements 
 
     try {
 
-      if(localhost_only) {
-        server = new WebServer("localhost", port, www_root, key);
+      if (localhost_only) {
+        server = new WebServer("localhost", port, www_root, key, salt, iv, keySize, iterationCount);
       } else {
-        server = new WebServer(__getLocalIpAddress(), port, www_root, key);
+        server = new WebServer(__getLocalIpAddress(), port, www_root, key, salt, iv, keySize, iterationCount);
       }
 
 

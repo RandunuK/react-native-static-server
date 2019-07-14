@@ -7,9 +7,20 @@ const ROOT = null;
 const LOCALHOST = 'http://127.0.0.1:';
 
 class StaticServer {
-  constructor(port, root, opts, key) {
+  constructor(port, root, opts, key, salt, iv, keySize, ic) {
     console.log('arguments.length', arguments.length);
     switch (arguments.length) {
+      case 8:
+        this.port = `${port}` || PORT;
+        this.root = root || ROOT;
+        this.localOnly = (opts && opts.localOnly) || false;
+        this.keepAlive = (opts && opts.keepAlive) || false;
+        this.key = key;
+        this.salt = salt;
+        this.iv = iv;
+        this.keySize = keySize;
+        this.ic = ic;
+        break;
       case 4:
         this.port = `${port}` || PORT;
         this.root = root || ROOT;
@@ -78,7 +89,11 @@ class StaticServer {
       this.root,
       this.localOnly,
       this.keepAlive,
-      this.key
+      this.key,
+      this.salt,
+      this.iv,
+      this.keySize,
+      this.ic
     ).then(origin => {
       this._origin = origin;
       return origin;

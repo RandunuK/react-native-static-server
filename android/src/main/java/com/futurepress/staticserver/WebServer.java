@@ -32,9 +32,14 @@ import fi.iki.elonen.SimpleWebServer;
 public class WebServer extends SimpleWebServer {
     public static final String TAG = "WebServer";
 
-    public WebServer(String localAddr, int port, File wwwroot, String key) throws IOException {
+    public WebServer(String localAddr, int port, File wwwroot, String key, String salt, String iv, int keySize,
+    int iterationCount) throws IOException {
         super(localAddr, port, wwwroot, true, "*");
         keyString = key;
+        this.salt = salt;
+        this.siv = iv;
+        this.skey0size = keySize;
+        this.siteration0count = iterationCount;
         mimeTypes().put("xhtml", "application/xhtml+xml");
         mimeTypes().put("opf", "application/oebps-package+xml");
         mimeTypes().put("ncx", "application/xml");
@@ -65,7 +70,7 @@ public class WebServer extends SimpleWebServer {
         if (isEncrypted) {
             InputStream inputStream = r.getData();
             byte[] encryptedBytes = inputStreamToBytes(inputStream);
-            byte[] decryptedBytes = decryptFromBytes(encryptedBytes, keyString, SALT, IV, ITERATION_COUNT, KEY_SIZE);
+            byte[] decryptedBytes = decryptFromBytes(encryptedBytes, keyString, salt, siv, siteration0count, skey0size);
             InputStream is = new ByteArrayInputStream(decryptedBytes); // convert a byte array into an InputStream
             String contentLength = "Content-Length";
             r.addHeader(contentLength, String.valueOf(decryptedBytes.length));
@@ -146,6 +151,10 @@ public class WebServer extends SimpleWebServer {
     private static final String SALT = "";
     private static final int KEY_SIZE = 128;
     private static final int ITERATION_COUNT = 100;
+    private string salt = "";
+    private string siv = "";
+    private int skey0size = 0;
+    private int siteration0count = 0;
     private static final String PASSPHRASE = "the quick brown fox jumps over the lazy dog";
     private boolean isEncrypted = false;
     private String keyString = "";
