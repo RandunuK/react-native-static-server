@@ -5,9 +5,12 @@ const { FPStaticServer } = NativeModules;
 const PORT = '';
 const ROOT = null;
 const LOCALHOST = 'http://127.0.0.1:';
+const TAG = 'StaticServer';
 
 class StaticServer {
   constructor(port, root, opts, key, salt, iv, keySize, ic) {
+    console.log(TAG, arguments.length);
+
     switch (arguments.length) {
       case 8:
         this.port = `${port}` || PORT;
