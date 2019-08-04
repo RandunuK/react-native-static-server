@@ -151,8 +151,8 @@ public class WebServer extends SimpleWebServer
     private static final String SALT = "";
     private static final int KEY_SIZE = 128;
     private static final int ITERATION_COUNT = 100;
-    private string salt = "";
-    private string siv = "";
+    private String salt = "";
+    private String siv = "";
     private int skey0size = 0;
     private int siteration0count = 0;
     private static final String PASSPHRASE = "the quick brown fox jumps over the lazy dog";
