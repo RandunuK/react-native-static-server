@@ -8,7 +8,6 @@ const LOCALHOST = 'http://127.0.0.1:';
 
 class StaticServer {
   constructor(port, root, opts, key, salt, iv, keySize, ic) {
-    console.log('arguments.length', arguments.length);
     switch (arguments.length) {
       case 8:
         this.port = `${port}` || PORT;
@@ -81,7 +80,7 @@ class StaticServer {
     this.running = true;
 
     if (!this.keepAlive && Platform.OS === 'android') {
-      AppState.addEventListener('change', this._handleAppStateChangeFn.bind(this));
+      AppState.addEventListener('change', this._handleAppStateChangeFn);
     }
 
     return FPStaticServer.start(
@@ -134,14 +133,14 @@ class StaticServer {
   get origin() {
     return this._origin;
   }
-  isRunning() {
-		return FPStaticServer.isRunning()
-			.then(running => {
-				this.running = running;
 
-				return this.running;
-			})
-	}
+  isRunning() {
+    return FPStaticServer.isRunning().then(running => {
+      this.running = running;
+
+      return this.running;
+    });
+  }
 }
 
 export default StaticServer;

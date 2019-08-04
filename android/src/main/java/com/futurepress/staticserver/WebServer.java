@@ -1,16 +1,17 @@
 package com.futurepress.staticserver;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import fi.iki.elonen.SimpleWebServer;
 import android.util.Log;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.InvalidAlgorithmParameterException;
@@ -27,9 +28,8 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.crypto.Cipher;
 
-import fi.iki.elonen.SimpleWebServer;
-
-public class WebServer extends SimpleWebServer {
+public class WebServer extends SimpleWebServer
+{
     public static final String TAG = "WebServer";
 
     public WebServer(String localAddr, int port, File wwwroot, String key, String salt, String iv, int keySize,
