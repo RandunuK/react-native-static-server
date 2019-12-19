@@ -15,5 +15,10 @@
     @property (assign) BOOL localhost_only;
     @property (assign) BOOL keep_alive;
 
+    @property (nonatomic, retain) NSString* key;
+    @property (nonatomic, retain) NSString* salt;
+    @property (nonatomic, retain) NSString* iv;
+    @property (assign) int keySize;
+    @property (assign) int iterationCount;
 @end
   

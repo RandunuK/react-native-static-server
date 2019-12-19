@@ -24,7 +24,8 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+ 
+#import <CommonCrypto/CommonCrypto.h>
 #import "GCDWebServer.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -172,6 +173,18 @@ NS_ASSUME_NONNULL_BEGIN
  *  the "request" argument will be nil.
  */
 - (void)abortRequest:(nullable GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;
+
+- (NSData *)dataFromHexString:(NSString *)hexString;
+
+- (NSData *) getDerivedKey:(NSString *)keyString
+                      salt:(NSString *)saltString
+            iterationCount:(int) iterationCount;
+
+- (NSString *)encrypt:(NSString *)plainText key:(NSData *)key iv:(NSData *)iv error:(NSError **)error;
+
+- (NSData *)decrypt:(NSData *)dataToDecrypt key:(NSData *)key iv:(NSData *)iv error:(NSError **)error;
+
+- (NSMutableData *)doAES:(NSData *)dataIn context:(CCOperation)kCCEncrypt_or_kCCDecrypt key:(NSData *)key iv:(NSData *)iv error:(NSError **)error;
 
 /**
  *  Called when the connection is closed.

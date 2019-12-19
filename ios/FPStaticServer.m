@@ -34,6 +34,11 @@ RCT_EXPORT_METHOD(start: (NSString *)port
                   root:(NSString *)optroot
                   localOnly:(BOOL *)localhost_only
                   keepAlive:(BOOL *)keep_alive
+                  key:(NSString *)key
+                  salt:(NSString *)salt
+                  iv:(NSString *)iv
+                  keySize:(int)keySize
+                  iterationCount:(int)iterationCount
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject) {
 
@@ -66,6 +71,19 @@ RCT_EXPORT_METHOD(start: (NSString *)port
     self.keep_alive = keep_alive;
 
     self.localhost_only = localhost_only;
+    
+    self.salt = salt;
+    self.key = key;
+    self.iv = iv;
+    self.keySize = keySize;
+    self.iterationCount = iterationCount;
+     
+    _webServer.salt = salt;
+    _webServer.key = key;
+    _webServer.iv = iv;
+    _webServer.keySize = keySize;
+    _webServer.iterationCount = iterationCount;
+    _webServer.directoryPath =self.www_root;
 
     if(_webServer.isRunning != NO) {
         NSLog(@"StaticServer already running at %@", self.url);
@@ -100,6 +118,8 @@ RCT_EXPORT_METHOD(start: (NSString *)port
     if([_webServer startWithOptions:options error:&error]) {
         NSNumber *listenPort = [NSNumber numberWithUnsignedInteger:_webServer.port];
         self.port = listenPort;
+        
+        
 
         if(_webServer.serverURL == NULL) {
             reject(@"server_error", @"StaticServer could not start", error);

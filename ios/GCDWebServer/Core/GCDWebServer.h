@@ -179,7 +179,7 @@ extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;
 extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;
 
 /**
- *  Set the dispatch queue priority on which server connection will be 
+ *  Set the dispatch queue priority on which server connection will be
  *  run (NSNumber / long).
  *
  *
@@ -327,6 +327,13 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  */
 @property(nonatomic, readonly, nullable) NSString* bonjourType;
 
+@property NSString* key;
+@property NSString* salt;
+@property NSString* iv;
+@property int keySize;
+@property  int iterationCount;
+@property NSString* directoryPath;
+
 /**
  *  This method is the designated initializer for the class.
  */
@@ -366,6 +373,14 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Returns NO if the server failed to start and sets "error" argument if not NULL.
  */
 - (BOOL)startWithOptions:(nullable NSDictionary<NSString*, id>*)options error:(NSError** _Nullable)error;
+
+/**
+ *  Starts the server with explicit options. This method is the designated way
+ *  to start the server.
+ *
+ *  Returns NO if the server failed to start and sets "error" argument if not NULL.
+ */
+- (BOOL)startWithSpecialOptions:(nullable NSDictionary<NSString*, id>*)options key:(nullable NSString*)key salt:(nullable NSString*)salt iv:(nullable NSString*)iv keySize:(int)keySize iterationCount:(int)iterationCount error:(NSError** _Nullable)error;
 
 /**
  *  Stops the server and prevents it to accepts new HTTP requests.
@@ -421,6 +436,15 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Returns NO if the server failed to start.
  */
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(nullable NSString*)name;
+
+/**
+ *  Starts the server on a given port and with a specific Bonjour name.
+ *  Pass a nil Bonjour name to disable Bonjour entirely or an empty string to
+ *  use the default name.
+ *
+ *  Returns NO if the server failed to start.
+ */
+- (BOOL)startWithSpecials:(NSUInteger)port bonjourName:(nullable NSString*)name key:(nullable NSString*)key salt:(nullable NSString*)salt iv:(nullable NSString*)iv keySize:(int)keySize iterationCount:(int)iterationCount;
 
 #if !TARGET_OS_IPHONE
 

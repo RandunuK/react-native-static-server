@@ -749,6 +749,33 @@ static inline NSString* _EncodeBase64(NSString* string) {
   return NO;
 }
 
+- (BOOL)startWithSpecialOptions:(NSDictionary<NSString *,id> *)options key:(NSString *)key salt:(NSString *)salt iv:(NSString *)iv keySize:(int)keySize iterationCount:(int)iterationCount error:(NSError *__autoreleasing  _Nullable *)error {
+  if (_options == nil) {
+    _options = options ? [options copy] : @{};
+      
+#if TARGET_OS_IPHONE
+    _suspendInBackground = [(NSNumber*)_GetOption(_options, GCDWebServerOption_AutomaticallySuspendInBackground, @YES) boolValue];
+    if (((_suspendInBackground == NO) || ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground)) && ![self _start:error])
+#else
+    if (![self _start:error])
+#endif
+    {
+      _options = nil;
+      return NO;
+    }
+#if TARGET_OS_IPHONE
+    if (_suspendInBackground) {
+      [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+      [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_willEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+    }
+#endif
+    return YES;
+  } else {
+    GWS_DNOT_REACHED();
+  }
+  return NO;
+}
+
 - (BOOL)isRunning {
   return (_options ? YES : NO);
 }
@@ -1027,7 +1054,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
           GCDWebServerResponse* response = nil;
           NSString* filePath = [directoryPath stringByAppendingPathComponent:GCDWebServerNormalizePath([request.path substringFromIndex:basePath.length])];
-          NSString* fileType = [[[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL] fileType];
+          NSString* fileType = [[[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL] fileType];       
           if (fileType) {
             if ([fileType isEqualToString:NSFileTypeDirectory]) {
               if (indexFilename) {
@@ -1052,7 +1079,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
           } else {
             response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_NotFound];
           }
-          return response;
+        return response;
         }];
   } else {
     GWS_DNOT_REACHED();

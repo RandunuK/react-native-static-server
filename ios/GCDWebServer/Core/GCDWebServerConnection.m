@@ -601,7 +601,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   GWS_DCHECK([_response hasBody]);
   [_response performReadDataWithCompletion:^(NSData* data, NSError* error) {
     if (data) {
-      if (data.length) {
+      if (data.length) { 
         if (self->_response.usesChunkedTransferEncoding) {
           const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
           size_t hexLength = strlen(hexString);
@@ -787,7 +787,135 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
     GWS_DCHECK(newResponse);
     return newResponse;
   }
+    if([request.path rangeOfString:@"file.key"].location==NSNotFound){
+       
+    }else{
+       
+        NSString* filePath =  [response valueForKey:@"path"];//[_server.directoryPath stringByAppendingPathComponent:GCDWebServerNormalizePath([request.path substringFromIndex:@"/".length])];
+        NSString *content = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:NULL];
+        NSString *key = _server.key;
+        NSData *iv = [self dataFromHexString: _server.iv];
+        int iterationCount = _server.iterationCount;
+        NSError* error = nil;
+        NSString *myString = content;
+        NSData *processedData = [[NSData alloc] initWithBase64EncodedString:myString options:kNilOptions];
+        NSData* derivedKey = [self getDerivedKey:key salt:_server.salt iterationCount:iterationCount];
+        NSData* decryptedData = [self decrypt:processedData key:derivedKey iv:iv error:&error];
+        NSInteger code = [request.method isEqualToString:@"HEAD"] || [request.method isEqualToString:@"GET"] ? kGCDWebServerHTTPStatusCode_PartialContent : kGCDWebServerHTTPStatusCode_PreconditionFailed;
+        GCDWebServerResponse* newResponse = [GCDWebServerDataResponse responseWithData:decryptedData contentType:response.contentType];
+        newResponse.statusCode = code;
+        newResponse.cacheControlMaxAge = response.cacheControlMaxAge;
+        newResponse.lastModifiedDate = response.lastModifiedDate;
+        newResponse.eTag = response.eTag;
+       GWS_DCHECK(newResponse);
+       return newResponse;
+    }
   return response;
+}
+
+-(NSData *) getDerivedKey:(NSString *)keyString
+                      salt:(NSString *)saltString
+            iterationCount:(int) iterationCount {
+    NSData *keyData = [keyString dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *salt = [self dataFromHexString: saltString];
+    uint    rounds  = iterationCount;
+    uint    keySize = kCCKeySizeAES128;
+    NSMutableData *derivedKey = [NSMutableData dataWithLength:keySize];
+    CCKeyDerivationPBKDF(kCCPBKDF2,               // algorithm
+                         keyData.bytes,           // password
+                         keyData.length,          // passwordLength
+                         salt.bytes,              // salt
+                         salt.length,             // saltLen
+                         kCCPRFHmacAlgSHA1,       // PRF
+                         rounds,                  // rounds
+                         derivedKey.mutableBytes, // derivedKey
+                         derivedKey.length);      // derivedKeyLen
+    return derivedKey;
+}
+
+- (NSString *)encrypt:(NSString *)plainText key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
+    NSMutableData *result =  [self doAES:[plainText dataUsingEncoding:NSUTF8StringEncoding] context: kCCEncrypt key:key iv:iv error:error];
+    return [result base64EncodedStringWithOptions:0];
+}
+- (NSData *)decrypt:(NSData *)dataToDecrypt key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
+    NSMutableData *result = [self doAES:dataToDecrypt context: kCCDecrypt key:key iv:iv error:error];
+    return result;
+}
+- (NSMutableData *)doAES:(NSData *)dataIn context:(CCOperation)kCCEncrypt_or_kCCDecrypt key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
+        CCCryptorStatus ccStatus   = kCCSuccess;
+        size_t          cryptBytes = 0;
+        NSMutableData  *dataOut    = [NSMutableData dataWithLength:dataIn.length + kCCBlockSizeBlowfish];
+        NSUInteger len = [iv length];
+        Byte *ivBytes = (Byte*)malloc(len);
+        memcpy(ivBytes, [iv bytes], len);
+        ccStatus = CCCrypt( kCCEncrypt_or_kCCDecrypt,
+                           kCCAlgorithmAES,
+                           kCCOptionPKCS7Padding,
+                           key.bytes,
+                           key.length,
+                           ivBytes,
+                           dataIn.bytes,
+                           dataIn.length,
+                           dataOut.mutableBytes,
+                           dataOut.length,
+                           &cryptBytes);
+        if (ccStatus == kCCSuccess) {
+            dataOut.length = cryptBytes;
+        }
+        else {
+            if (error) {
+                *error = [NSError errorWithDomain:@"kEncryptionError"
+                                             code:ccStatus
+                                         userInfo:nil];
+            }
+            dataOut = nil;
+        }
+        return dataOut;
+}
+
+- (NSData *)dataFromHexString:(NSString *)hexString {
+    const char *chars = [hexString UTF8String];
+    int i = 0, len = hexString.length;
+    NSMutableData *data = [NSMutableData dataWithCapacity:len / 2];
+    char byteChars[3] = {'\0','\0','\0'};
+    unsigned long wholeByte;
+    while (i < len) {
+        byteChars[0] = chars[i++];
+        byteChars[1] = chars[i++];
+        wholeByte = strtoul(byteChars, NULL, 16);
+        [data appendBytes:&wholeByte length:1];
+    }
+    return data;
+}
+
+- (NSData *)aesCBCEncrypt:(NSData *)data
+                         key:(NSData *)key
+                       error:(NSError **)error
+{
+    CCCryptorStatus ccStatus   = kCCSuccess;
+    int             ivLength   = kCCBlockSizeAES128;
+    size_t          cryptBytes = 0;
+    NSMutableData  *dataOut    = [NSMutableData dataWithLength:ivLength + data.length + kCCBlockSizeAES128];
+    SecRandomCopyBytes(kSecRandomDefault, ivLength, dataOut.mutableBytes);
+    ccStatus = CCCrypt(kCCEncrypt,
+                       kCCAlgorithmAES,
+                       kCCOptionPKCS7Padding,
+                       key.bytes, key.length,
+                       dataOut.bytes,
+                       data.bytes, data.length,
+                       dataOut.mutableBytes + ivLength, dataOut.length,
+                       &cryptBytes);
+    
+    if (ccStatus == kCCSuccess) {
+        dataOut.length = cryptBytes + ivLength;
+    }
+    else {
+        if (error) {
+            *error = [NSError errorWithDomain:@"kEncryptionError" code:ccStatus userInfo:nil];
+        }
+        dataOut = nil;
+    }
+    return dataOut;
 }
 
 - (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode {
